@@ -1,9 +1,26 @@
-document.body.style.border = "5px solid red";
-console.log("Canvas Grade Viewer loaded. Ha ha teachers.");
+document.addEventListener('DOMContentLoaded', function() {
+    function checkZeroConvert(stringNum) {
+      if (stringNum == "") {
+          stringNum = 0.0;
+      } else {
+          stringNum = parseFloat(stringNum);
+      }
+      return stringNum
+    }
+    var assignmentsList = document.getElementsByClassName("student_assignment editable");
+    var grades = [];
+    var gradeMaxes = [];
+    var gradeTypes = [];
+    console.log(assignmentsList[0]);
+    for (var i = 0; i < assignmentsList.length; i++) {
+        var tempAssignment = assignmentsList[i].innerHTML.split("\n");
+        var lengthInner = tempAssignment.length;
 
-var assignments = document.getElementsByClassName("student_assignment assignment_graded editable");
-var i;
-for (i = 0; i < x.length; i++) {
-  console.log("Red");
-  assignments[i].style.backgroundColor = "red";
-}
+        grades.push(checkZeroConvert(tempAssignment[lengthInner-56].replace(/\s/g,'')));
+
+        gradeMaxes.push(checkZeroConvert(tempAssignment[lengthInner-31].replace(/\s/g,'')));
+
+    }
+    console.log(grades);
+    console.log(gradeMaxes);
+}, false);
