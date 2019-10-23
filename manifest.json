@@ -20,7 +20,7 @@
   },
   "content_scripts": [{
         "run_at": "document_start",
-        "matches": ["*://*.instructure.com/courses/*/grades"],
+        "matches": ["*://*.instructure.com/courses/*/grades*"],
         "js": [
             "canvasgradeviewer.client.js"
         ]
