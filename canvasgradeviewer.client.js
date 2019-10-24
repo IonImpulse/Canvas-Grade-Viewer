@@ -90,6 +90,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log(weightValues);
         var emptyWeights = [];
+        var weightSum = 0;
+
+        for (var i = 0; i < weightValues.length; i++) {
+            weightSum = weightSum + weightValues[i];
+        }
+
+
         for (var i = 0; i < weightMax.length; i++) {
             if (weightMax[i] == 0) {
                 console.log("hl");
@@ -98,12 +105,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(multiplier);
                 for (var j = 0; j < weightValues.length; j++) {
                     console.log(j);
-                    weightValues[j] = weightValues[j] * (100/(100-multiplier));
+                    weightValues[j] = weightValues[j] * (weightSum/(weightSum-multiplier));
                 }
             }
             console.log(weightValues);
         }
 
+        console.log(weightGrade, weightMax);
         for (var i = 0; i < weightMax.length; i++) {
           if (weightMax[i] != 0) {
               console.log(totalGrade, weightGrade[i], weightMax[i], weightValues[i]);
@@ -117,6 +125,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var gradeOutput = document.getElementById("student-grades-right-content");
     var tempDiv = gradeOutput.innerHTML.split("\n");
     tempDiv[2] = "Total: " + (totalGrade.toString()).slice(0,5) + "%";
+    if (weightSum != 100) {
+      tempDiv[2] = tempDiv[2] + " out of " + (weightSum.toString()).slice(0,5) + "%\n(Instructor has set total grade weight to be out of something less then 100%)";
+    }
     document.getElementById("student-grades-right-content").innerHTML = tempDiv.join("\n");
 
 }, false);
