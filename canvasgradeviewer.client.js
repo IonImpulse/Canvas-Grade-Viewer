@@ -86,13 +86,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             console.log(weightGrade);
             console.log(weightMax);
-            if (weightMax[i] != 0) {
+        }
+
+        console.log(weightValues);
+        var emptyWeights = [];
+        for (var i = 0; i < weightMax.length; i++) {
+            if (weightMax[i] == 0) {
+                console.log("hl");
+                emptyWeights.push(weightValues[i]);
+                var multiplier = weightValues[i];
+                console.log(multiplier);
+                for (var j = 0; j < weightValues.length; j++) {
+                    console.log(j);
+                    weightValues[j] = weightValues[j] * (100/(100-multiplier));
+                }
+            } else {
                 totalGrade = totalGrade + (weightGrade[i]/weightMax[i] * (weightValues[i]/100) * 100);
             }
+            console.log(weightValues);
 
         }
     }
-
+    console.log(emptyWeights);
     console.log(totalGrade);
 
     var gradeOutput = document.getElementById("student-grades-right-content");
