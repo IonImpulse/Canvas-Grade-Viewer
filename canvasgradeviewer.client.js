@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var gradeOutput = document.getElementById("student-grades-right-content");
     var tempDiv = gradeOutput.innerHTML.split("\n");
-    tempDiv[2] = "Total: " + (totalGrade.toString());
-    gradeOutput = tempDiv.join("\n");
+    tempDiv[2] = "Total: " + (totalGrade.toString()).slice(0,5) + "%";
+    document.getElementById("student-grades-right-content").innerHTML = tempDiv.join("\n");
 
 }, false);
