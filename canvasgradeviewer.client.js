@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var grades = [];
     var gradeMaxes = [];
     var gradeTypes = [];
+    var weightSum = 100;
 
     for (var i = 0; i < assignmentsList.length; i++) {
         var tempAssignment = assignmentsList[i].innerHTML.split("\n");
@@ -90,8 +91,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         console.log(weightValues);
         var emptyWeights = [];
-        var weightSum = 0;
-
+        weightSum = 0;
+        
         for (var i = 0; i < weightValues.length; i++) {
             weightSum = weightSum + weightValues[i];
         }
@@ -119,7 +120,6 @@ document.addEventListener('DOMContentLoaded', function() {
           }
         }
     }
-    console.log(emptyWeights);
     console.log(totalGrade);
 
     var gradeOutput = document.getElementById("student-grades-right-content");
