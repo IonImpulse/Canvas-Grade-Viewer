@@ -100,11 +100,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log(j);
                     weightValues[j] = weightValues[j] * (100/(100-multiplier));
                 }
-            } else {
-                totalGrade = totalGrade + (weightGrade[i]/weightMax[i] * (weightValues[i]/100) * 100);
             }
             console.log(weightValues);
+        }
 
+        for (var i = 0; i < weightMax.length; i++) {
+          if (weightMax[i] != 0) {
+              console.log(totalGrade, weightGrade[i], weightMax[i], weightValues[i]);
+              totalGrade = totalGrade + (weightGrade[i]/weightMax[i] * (weightValues[i]/100) * 100);
+          }
         }
     }
     console.log(emptyWeights);
