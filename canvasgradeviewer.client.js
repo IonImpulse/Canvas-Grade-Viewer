@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(weightValues);
         var emptyWeights = [];
         weightSum = 0;
-        
+
         for (var i = 0; i < weightValues.length; i++) {
             weightSum = weightSum + weightValues[i];
         }
@@ -124,9 +124,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var gradeOutput = document.getElementById("student-grades-right-content");
     var tempDiv = gradeOutput.innerHTML.split("\n");
-    tempDiv[2] = "Total: " + (totalGrade.toString()).slice(0,5) + "%";
+    tempDiv[2] = "Total: ";
+
     if (weightSum != 100) {
-      tempDiv[2] = tempDiv[2] + " out of " + (weightSum.toString()).slice(0,5) + "%\n(Instructor has set total grade weight to be out of something less then 100%)";
+      tempDiv[2] = tempDiv[2] + ((totalGrade/weightSum*100).toString()).slice(0,5) + "% ("  + (totalGrade.toString()).slice(0,5) + "% out of " + (weightSum.toString()).slice(0,5) + "%)";
+    }
+    else {
+      tempDiv[2] = tempDiv[2] + (totalGrade.toString()).slice(0,5) + "%";
     }
     document.getElementById("student-grades-right-content").innerHTML = tempDiv.join("\n");
 
