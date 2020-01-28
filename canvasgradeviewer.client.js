@@ -178,7 +178,18 @@ document.addEventListener('mouseup', function() {
 
 document.addEventListener('keydown', function(e) {
     if(e.keyCode == 13) {
-        gradeCheck();
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+         }
+        async function WaitForGrade() {
+            //console.log("waiting..");
+            await sleep(200);
+            //console.log("done!");
+            gradeCheck();
+            //console.log("mouse clicked");
+            
+        }
+        WaitForGrade();
         //console.log("enter was pressed");
     }
 }, false);
