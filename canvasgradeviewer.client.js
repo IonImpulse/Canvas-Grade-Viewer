@@ -1,24 +1,42 @@
 function gradeCheck() {
     function checkZeroConvert(stringNum) {
-        if (stringNum == "") {
+        if (parseFloat(stringNum) == NaN) {
             stringNum = 0.0;
+            //console.log("Did not work");
         } else {
             stringNum = parseFloat(stringNum);
         }
         return stringNum;
     
     }
+
     function findIGrade(inputAssignment) {
-        var outputGrade = 0
-        inputAssignment
+        var outputGrade = inputAssignment[inputAssignment.length - 56].replace(/\s/g,'');
+        //console.log("First",outputGrade);
+
+        if (isNaN(inputAssignment[inputAssignment.length - 54].replace(/\s/g,'')) == false) {
+            outputGrade = inputAssignment[inputAssignment.length - 60].replace(/\s/g,'');
+            //console.log("Reverted whatif", outputGrade)
+        } else {
+            if (outputGrade != "" && isNaN(parseFloat(outputGrade)) == true) {
+                outputGrade = isolateWeight(inputAssignment[inputAssignment.length - 43].replace(/\s/g,''));
+                //console.log("Second",outputGrade);
+            }
+        }
+        
+        
+
+        outputGrade = parseFloat(outputGrade);
+        return(outputGrade);
     }
 
     function isolateWeight(weightString) {
         weightString = weightString.slice(weightString.indexOf(">") + 1, weightString.indexOf("<", weightString.indexOf(">")));
         return weightString;
     }
+
     var assignmentsList = document.getElementsByClassName("student_assignment editable");
-    console.log(assignmentsList)
+    //console.log(assignmentsList);
     var grades = [];
     var gradeMaxes = [];
     var gradeTypes = [];
@@ -27,9 +45,13 @@ function gradeCheck() {
     for (var i = 0; i < assignmentsList.length; i++) {
         var tempAssignment = assignmentsList[i].innerHTML.split("\n");
         var lengthInner = tempAssignment.length;
+        //console.log(tempAssignment);
 
-        if (checkZeroConvert(tempAssignment[lengthInner-56].replace(/\s/g,'')) != "" && checkZeroConvert(tempAssignment[lengthInner-31].replace(/\s/g,'')) != 0) {
-            grades.push(checkZeroConvert(tempAssignment[lengthInner-56].replace(/\s/g,'')));
+        var gradeFound = findIGrade(tempAssignment);
+
+        if (gradeFound != "" && isNaN(gradeFound) == false && checkZeroConvert(tempAssignment[lengthInner-31].replace(/\s/g,'')) != 0) {
+            
+            grades.push(gradeFound);
 
             gradeMaxes.push(checkZeroConvert(tempAssignment[lengthInner-31].replace(/\s/g,'')));
 
@@ -37,14 +59,14 @@ function gradeCheck() {
         }
     }
 
-    console.log(grades);
-    console.log(gradeMaxes);
+    //console.log(grades);
+    //console.log(gradeMaxes);
 
     var weightsListRaw = document.getElementById("assignments-not-weighted").innerHTML.split("\n");
 
     if (isolateWeight(weightsListRaw[3]) == "Assignments are weighted by group:") {
         var weightsExist = true;
-        console.log("True")
+        //console.log("True")
         var weightNames = [];
         var weightValues = [];
         var iterations = weightsListRaw.length - 15;
@@ -91,11 +113,9 @@ function gradeCheck() {
                     weightMax[i] = weightMax[i] + gradeMaxes[j];
                 }
             }
-            console.log(weightGrade);
-            console.log(weightMax);
         }
 
-        console.log(weightValues);
+        //console.log(weightValues);
         var emptyWeights = [];
         weightSum = 0;
 
@@ -106,22 +126,17 @@ function gradeCheck() {
 
         for (var i = 0; i < weightMax.length; i++) {
             if (weightMax[i] == 0) {
-                console.log("hl");
                 emptyWeights.push(weightValues[i]);
                 var multiplier = weightValues[i];
-                console.log(multiplier);
                 for (var j = 0; j < weightValues.length; j++) {
-                    console.log(j);
                     weightValues[j] = weightValues[j] * (weightSum/(weightSum-multiplier));
                 }
             }
-            console.log(weightValues);
         }
 
-        console.log(weightGrade, weightMax);
         for (var i = 0; i < weightMax.length; i++) {
           if (weightMax[i] != 0) {
-              console.log(totalGrade, weightGrade[i], weightMax[i], weightValues[i]);
+              //console.log(totalGrade, weightGrade[i], weightMax[i], weightValues[i]);
               totalGrade = totalGrade + (weightGrade[i]/weightMax[i] * (weightValues[i]/100) * 100);
           }
         }
@@ -142,11 +157,28 @@ function gradeCheck() {
 
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {   
     gradeCheck();
 }, false);
 
-document.addEventListener('selectionchange', function() {
-    gradeCheck();
-    console.log("HEEEE")
+document.addEventListener('mouseup', function() {
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+     }
+    async function WaitForGrade() {
+        //console.log("waiting..");
+        await sleep(200);
+        //console.log("done!");
+        gradeCheck();
+        //console.log("mouse clicked");
+        
+    }
+    WaitForGrade();
+}, false);
+
+document.addEventListener('keydown', function(e) {
+    if(e.keyCode == 13) {
+        gradeCheck();
+        //console.log("enter was pressed");
+    }
 }, false);
