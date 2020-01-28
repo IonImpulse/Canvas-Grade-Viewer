@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+function gradeCheck() {
     function checkZeroConvert(stringNum) {
         if (stringNum == "") {
             stringNum = 0.0;
@@ -6,6 +6,11 @@ document.addEventListener('DOMContentLoaded', function() {
             stringNum = parseFloat(stringNum);
         }
         return stringNum;
+    
+    }
+    function findIGrade(inputAssignment) {
+        var outputGrade = 0
+        inputAssignment
     }
 
     function isolateWeight(weightString) {
@@ -13,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return weightString;
     }
     var assignmentsList = document.getElementsByClassName("student_assignment editable");
+    console.log(assignmentsList)
     var grades = [];
     var gradeMaxes = [];
     var gradeTypes = [];
@@ -134,4 +140,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     document.getElementById("student-grades-right-content").innerHTML = tempDiv.join("\n");
 
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    gradeCheck();
+}, false);
+
+document.addEventListener('selectionchange', function() {
+    gradeCheck();
+    console.log("HEEEE")
 }, false);
