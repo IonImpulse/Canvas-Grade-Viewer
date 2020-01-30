@@ -3,7 +3,11 @@
 
   "name": "Canvas Grade Viewer",
   "description": "This extension lets you view your canvas grade average per class, even when total grades are disabled.",
+<<<<<<< HEAD
   "version": "1.6.1",
+=======
+  "version": "1.6",
+>>>>>>> 5e789be30fee2a0b475ca5674bcd7f68ed60e8b2
   "author": "Ethan Vazquez",
 
   "icons": {
