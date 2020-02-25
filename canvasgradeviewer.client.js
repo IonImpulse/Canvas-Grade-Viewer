@@ -63,10 +63,10 @@ function gradeCheck() {
     //console.log(gradeMaxes);
 
     var weightsListRaw = document.getElementById("assignments-not-weighted").innerHTML.split("\n");
-
+    console.log(weightsListRaw);
     if (isolateWeight(weightsListRaw[3]) == "Assignments are weighted by group:") {
         var weightsExist = true;
-        //console.log("True")
+        console.log("True")
         var weightNames = [];
         var weightValues = [];
         var iterations = weightsListRaw.length - 15;
