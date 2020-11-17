@@ -1,178 +1,325 @@
 function gradeCheck() {
-    function checkZeroConvert(stringNum) {
-        if (parseFloat(stringNum) == NaN) {
-            stringNum = 0.0;
-            //console.log("Did not work");
+    function getBrowser() {
+        if( navigator.userAgent.indexOf("Chrome") != -1 ) {
+          return "Chrome";
+        } else if( navigator.userAgent.indexOf("Opera") != -1 ) {
+          return "Opera";
+        } else if( navigator.userAgent.indexOf("MSIE") != -1 ) {
+          return "IE";
+        } else if( navigator.userAgent.indexOf("Firefox") != -1 ) {
+          return "Firefox";
         } else {
-            stringNum = parseFloat(stringNum);
+          return "unknown";
         }
-        return stringNum;
-    
     }
 
-    function findIGrade(inputAssignment) {
-        var outputGrade = inputAssignment[inputAssignment.length - 56].replace(/\s/g,'');
-        //console.log("First",outputGrade);
+    var line_to_get_env = 88;
 
-        if (isNaN(inputAssignment[inputAssignment.length - 54].replace(/\s/g,'')) == false) {
-            outputGrade = inputAssignment[inputAssignment.length - 60].replace(/\s/g,'');
-            //console.log("Reverted whatif", outputGrade)
-        } else {
-            if (outputGrade != "" && isNaN(parseFloat(outputGrade)) == true) {
-                outputGrade = isolateWeight(inputAssignment[inputAssignment.length - 43].replace(/\s/g,''));
-                //console.log("Second",outputGrade);
-            }
+    if (getBrowser() == "Chrome") {
+        line_to_get_env = 37
+    }
+
+    var gradeOutput = document.getElementById("student-grades-final");
+    gradeOutput.innerText = "Error Loading ENV variable! Refresh page to display grade...";
+
+    var env_string = document.documentElement.innerHTML.split("\n")[line_to_get_env].trim();
+    console.log("loading eval string...");
+
+    eval("var " + env_string);
+
+    function sum(array) {
+        var to_return = 0;
+        for (i of array) {
+            to_return += i;
         }
-        
-        
-
-        outputGrade = parseFloat(outputGrade);
-        return(outputGrade);
+        return to_return;
     }
 
     function isolateWeight(weightString) {
         weightString = weightString.slice(weightString.indexOf(">") + 1, weightString.indexOf("<", weightString.indexOf(">")));
         return weightString;
     }
+    
+    function find_grade_max_type(inputAssignment) {
+        // Section to get grade/what-if grade, max, type, and weight id
+        // What-if grade is always set to the original grade, so we can just grab that
+
+        // Get weight ID
+        const id_html = inputAssignment.getElementsByClassName("assignment_id")[0].innerText;
+        var id = id_html.trim();
+
+        // Get what-if score
+        const whatif_points_html = inputAssignment.getElementsByClassName("what_if_score")[0].innerText;
+        var whatif_points = parseFloat(whatif_points_html.replace(",", ""));
+
+        // Get the maximun points possible per assignment
+        const maximum_points_html = inputAssignment.getElementsByClassName("possible points_possible")[0].innerText;
+        var maximum_points = parseFloat(maximum_points_html.replace(",", ""));
+
+        // Get what group/weight grade it is in
+        const type_html = inputAssignment.getElementsByClassName("context")[0].innerText;
+        var type = type_html.trim();
+        
+        // Get weight ID
+        const weight_id_html = inputAssignment.getElementsByClassName("assignment_group_id")[0].innerText;
+        var weight_id = weight_id_html.trim();
+
+        var assignment_to_return = {
+            id: id,
+            grade: whatif_points,
+            max: maximum_points,
+            group_id: weight_id
+        }
+
+        return(assignment_to_return);
+    }
+
+    function get_grade(assignments, weightsExist) {
+        if (weightsExist == false) {
+            let total_grade = 0;
+            let totalMax = 0;
+            for (assignment of assignments) {
+                total_grade = total_grade + assignment.grade;
+                totalMax = totalMax + assignment.max;
+            }
+    
+            if (total_grade == 0) {
+                total_grade = "N/A";
+            } else {
+                total_grade = total_grade/totalMax*100;
+            }
+            
+            const to_return = {
+                total_grade: total_grade,
+                all_group_grades: null,
+                all_group_maxes: null
+            };
+
+            return to_return;
+
+        } else {
+            let total_grade = 0;
+            var current_group = {
+                group_ids: [],
+                group_weights: [],
+                group_grades: [],
+                group_maxes: []
+                
+            };
+            
+            for (assignment of assignments) {
+                if (current_group.group_ids.indexOf(assignment.group_id) == -1) {
+                    current_group.group_ids.push(assignment.group_id);
+                    current_group.group_grades.push(0);
+                    current_group.group_maxes.push(0);
+                    
+                    for (a_group of ENV["assignment_groups"]) {
+                        
+                        if (a_group.id == assignment.group_id) {
+                            current_group.group_weights.push(a_group.group_weight);
+                        }
+                    }
+                }
+                
+                const a_index = current_group.group_ids.indexOf(assignment.group_id);
+                    
+                current_group.group_grades[a_index] += assignment.grade;
+                current_group.group_maxes[a_index] += assignment.max;
+            }
+
+            if (sum(current_group.group_weights) == 0) {
+                total_grade = 100*sum(current_group.group_grades)/sum(current_group.group_maxes);
+
+            } else {
+                for (index in current_group.group_maxes) {
+                    if (current_group.group_maxes[index] != 0) {
+                        total_grade = total_grade + (current_group.group_grades[index]/current_group.group_maxes[index] * (current_group.group_weights[index]/100) * 100);
+                    }
+                  }
+                  
+                  if (sum(current_group.group_weights) != 100) {
+                      total_grade = total_grade * (100/sum(current_group.group_weights));
+                  } 
+            }
+
+            const to_return = {
+                total_grade: total_grade,
+                all_group_grades: current_group.group_grades,
+                all_group_maxes: current_group.group_maxes,
+                all_group_weights: current_group.group_weights,
+                all_group_ids: current_group.group_ids
+            };
+            
+            return to_return;
+
+        }
+    }
+    
 
     var assignmentsList = document.getElementsByClassName("student_assignment editable");
-    //console.log(assignmentsList);
-    var grades = [];
-    var gradeMaxes = [];
-    var gradeTypes = [];
-    var weightSum = 100;
+
+    var assignments_list = [];
 
     for (var i = 0; i < assignmentsList.length; i++) {
         var tempAssignment = assignmentsList[i].innerHTML.split("\n");
-        var lengthInner = tempAssignment.length;
-        //console.log(tempAssignment);
+        
+        var retrivied = find_grade_max_type(assignmentsList[i]);
+        
+        if (retrivied.grade != "" && isNaN(retrivied.grade) == false) {
+            assignments_list.push(retrivied);
+        }
+    }
 
-        var gradeFound = findIGrade(tempAssignment);
+    var grading_period_is_all = false;
+    var weightsExist = false;
 
-        if (gradeFound != "" && isNaN(gradeFound) == false && checkZeroConvert(tempAssignment[lengthInner-31].replace(/\s/g,'')) != 0) {
+    if (ENV.group_weighting_scheme == "percent") {
+        weightsExist = true;
+    }
+
+    if (ENV.grading_periods != null && ENV.current_grading_period_id == 0) {
+        grading_period_is_all = true;
+    }
+
+    var total_grade = 0;
+    var all_grades = [];
+    var all_grade_maxes = [];
+    var all_group_ids = [];
+    var all_group_grades = [];
+    var all_group_maxes = [];
+    var all_group_ids = [];
+
+    var user_id = ENV.current_user.id;
+
+    if (grading_period_is_all == true) {
+        
+        var periods = [];
+        for (period of ENV.grading_periods) {
+            var temp_assignments = [];
+
+            for (assignment of assignments_list) {                
+                if (ENV["effective_due_dates"][assignment.id][user_id]["grading_period_id"] == period.id) {
+                    temp_assignments.push(assignment);
+                }
+            }
+
+            periods.push(get_grade(temp_assignments, weightsExist));
+        }
+        
+        let period_weight_sum = 0;
+
+        for (i in periods) {
+            all_group_grades = all_group_grades.concat(periods[i].all_group_grades);
+            all_group_maxes = all_group_maxes.concat(periods[i].all_group_maxes);
+            all_group_ids = all_group_ids.concat(periods[i].all_group_ids);
+
+            if (isNaN(periods[i].total_grade) == false) {
+                total_grade += (ENV["grading_periods"][i]["weight"]/100) * periods[i].total_grade;
+                period_weight_sum += ENV["grading_periods"][i]["weight"];
+            }
+        }
+
+        if (period_weight_sum != 100) {
+            total_grade = total_grade * (100/period_weight_sum);
+        }
+
+    } else {
+        var periods = [get_grade(assignments_list, weightsExist)];
+        total_grade = periods[0].total_grade;
+        all_group_grades = all_group_grades.concat(periods[0].all_group_grades);
+        all_group_maxes = all_group_maxes.concat(periods[0].all_group_maxes);
+        all_group_ids = all_group_ids.concat(periods[0].all_group_ids);
+    }
+
+    for (assignment of assignments_list) {
+        all_grades.push(assignment.grade);
+        all_grade_maxes.push(assignment.max);
+    }
+
+    // Debug string creation START 
+
+    let debug_string = "";
+
+    debug_string += "Grades:\n";
+
+    for (grade of all_grades) {
+        debug_string += `|${grade.toString().slice(0,5).padEnd(5)} `;
+    }
+
+    debug_string += "|\n";
+
+    for (grade of all_grade_maxes) {
+        debug_string += `|${grade.toString().slice(0,5).padEnd(5)} `;
+    }
+
+    debug_string += "|\n\n";
+
+    if (weightsExist == true) {
+        debug_string += "Group Grades:\n";
+
+        for (grade of all_group_grades) {
+            debug_string += `|${grade.toString().slice(0,7).padEnd(7)} `;
+        }
+
+        debug_string += "|\n";
+        
+        for (grade of all_group_maxes) {
+            debug_string += `|${grade.toString().slice(0,7).padEnd(7)} `;
+        }
+
+        debug_string += "|\n\n";
+    }
+
+    debug_string += `Total Grade: ${total_grade}`;
+
+    console.log(debug_string);
+    
+   // Debug string creation END
+
+    // Put the now-known grades in the HTML
+    // YAY it's here!
+    var gradeOutput = document.getElementById("student-grades-final");
+    gradeOutput.innerText = `Total: ${total_grade.toString().slice(0, 5)}%`;
+
+    if (weightsExist == true && grading_period_is_all == false) {
+        for (var i = 0; i < all_group_ids.length; i++) {
+            const section_html = document.getElementById(`submission_group-${[all_group_ids[i]]}`);
+
+            var section = section_html.innerHTML.split("\n");
+            grade_to_insert = (100*all_group_grades[i]/all_group_maxes[i]).toString().slice(0,5);
             
-            grades.push(gradeFound);
+            string_to_insert = `${all_group_grades[i]}/${all_group_maxes[i]} (${grade_to_insert}%)`;
+            
+            section[18] = " ";
+            section[19] = " ";
+            section[20] = " ";
 
-            gradeMaxes.push(checkZeroConvert(tempAssignment[lengthInner-31].replace(/\s/g,'')));
+            section[22] = string_to_insert;
 
-            gradeTypes.push(isolateWeight(tempAssignment[4]));
+            section_html.innerHTML = section.join("\n");
+            
         }
+
     }
+    
+}
 
-    //console.log(grades);
-    //console.log(gradeMaxes);
+var ENV;
 
-    var weightsListRaw = document.getElementById("assignments-not-weighted").innerHTML.split("\n");
-    console.log(weightsListRaw);
-    if (isolateWeight(weightsListRaw[3]) == "Assignments are weighted by group:") {
-        var weightsExist = true;
-        console.log("True")
-        var weightNames = [];
-        var weightValues = [];
-        var iterations = weightsListRaw.length - 15;
-
-        for (i = 14; i < iterations; i = i + 4) {
-            var tempWeightName = weightsListRaw[i];
-            var tempWeightValue = weightsListRaw[i + 1];
-
-            weightNames.push(isolateWeight(tempWeightName));
-            weightValues.push(parseFloat(isolateWeight(tempWeightValue)));
-        }
-
-    } else {
-        var weightsExist = false;
-    }
-
-    if (weightsExist == false) {
-        var totalGrade = 0;
-        var totalMax = 0;
-        for (var i = 0; i < grades.length; i++) {
-            totalGrade = totalGrade + grades[i];
-            totalMax = totalMax + gradeMaxes[i];
-        }
-
-        if (totalGrade == 0) {
-            totalGrade = "N/A";
-        } else {
-            totalGrade = totalGrade/totalMax*100;
-        }
-
-
-    } else {
-        var totalGrade = 0;
-        var weightGrade = [];
-        var weightMax = [];
-
-        for (var i = 0; i < weightNames.length; i++) {
-            weightGrade.push(0);
-            weightMax.push(0);
-
-            for (var j = 0; j < grades.length; j++) {
-                if (gradeTypes[j] == weightNames[i]) {
-                    weightGrade[i] = weightGrade[i] + grades[j];
-                    weightMax[i] = weightMax[i] + gradeMaxes[j];
-                }
-            }
-        }
-
-        //console.log(weightValues);
-        var emptyWeights = [];
-        weightSum = 0;
-
-        for (var i = 0; i < weightValues.length; i++) {
-            weightSum = weightSum + weightValues[i];
-        }
-
-
-        for (var i = 0; i < weightMax.length; i++) {
-            if (weightMax[i] == 0) {
-                emptyWeights.push(weightValues[i]);
-                var multiplier = weightValues[i];
-                for (var j = 0; j < weightValues.length; j++) {
-                    weightValues[j] = weightValues[j] * (weightSum/(weightSum-multiplier));
-                }
-            }
-        }
-
-        for (var i = 0; i < weightMax.length; i++) {
-          if (weightMax[i] != 0) {
-              //console.log(totalGrade, weightGrade[i], weightMax[i], weightValues[i]);
-              totalGrade = totalGrade + (weightGrade[i]/weightMax[i] * (weightValues[i]/100) * 100);
-          }
-        }
-    }
-    console.log(totalGrade);
-
-    var gradeOutput = document.getElementById("student-grades-right-content");
-    var tempDiv = gradeOutput.innerHTML.split("\n");
-    tempDiv[2] = "Total: ";
-
-    if (weightSum != 100) {
-      tempDiv[2] = tempDiv[2] + ((totalGrade/weightSum*100).toString()).slice(0,5) + "% ("  + (totalGrade.toString()).slice(0,5) + "% out of " + (weightSum.toString()).slice(0,5) + "%)";
-    }
-    else {
-      tempDiv[2] = tempDiv[2] + (totalGrade.toString()).slice(0,5) + "%";
-    }
-    document.getElementById("student-grades-right-content").innerHTML = tempDiv.join("\n");
-
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+ }
+async function WaitForGrade() {
+    await sleep(200);
+    gradeCheck();        
 }
 
 document.addEventListener('DOMContentLoaded', function() {   
-    gradeCheck();
+    gradeCheck();        
 }, false);
 
 document.addEventListener('mouseup', function() {
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-     }
-    async function WaitForGrade() {
-        //console.log("waiting..");
-        await sleep(200);
-        //console.log("done!");
-        gradeCheck();
-        //console.log("mouse clicked");
-        
-    }
+    
     WaitForGrade();
 }, false);
 
@@ -182,14 +329,9 @@ document.addEventListener('keydown', function(e) {
             return new Promise(resolve => setTimeout(resolve, ms));
          }
         async function WaitForGrade() {
-            //console.log("waiting..");
             await sleep(200);
-            //console.log("done!");
-            gradeCheck();
-            //console.log("mouse clicked");
-            
+            gradeCheck();            
         }
         WaitForGrade();
-        //console.log("enter was pressed");
     }
 }, false);
