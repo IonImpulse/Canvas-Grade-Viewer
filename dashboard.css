@@ -1,0 +1,102 @@
+body {
+    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+    margin: 0px;
+}
+
+header {
+    font-size: 30px;
+    font-style: bold;
+    padding-left: 20px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    width: 90%;
+}
+
+#grades {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-style: normal;
+    border-collapse: collapse;
+    width: 600px;
+}
+
+#grades td, #grades th {
+    padding: 5px 10px;
+}
+
+#grades tr:nth-child(even){background-color: #f7f7f7;}
+#grades tr:nth-child(odd){background-color: #f7f7f7;}
+
+#grades tr:hover {background-color: #ddd;}
+
+#grades th {
+    padding-top: 15px;
+    padding-bottom: 15px;
+    text-align: left;
+    background-color: #ca1d1d;
+    color: white;
+}
+
+#grades td {
+    height: 20px;
+}
+
+#grades tr {
+    transition-duration: 0.1s;
+}
+
+.grade-header {
+    font-style: italic;
+}
+table {
+    width: 100%;
+    margin-bottom: 30px;
+}
+.delete {
+    background-color: #ca1d1d;
+    color: white;
+    padding: 8px 12px;
+    text-align: center;
+    text-decoration: none;
+    display: block;
+    font-size: 16px;
+    margin: -5px -10px;
+    float: center;
+    transition-duration: 0.4s;
+    cursor: pointer;
+}
+
+#clear-data-div {
+    width: 100px;
+    margin: 12px;
+}
+.delete:hover {
+    background-color: #e74f4f; /* Green */
+    color: white;
+}
+
+.row-grade {
+    width: 80px;
+}
+
+.row-credit {
+    width: 40px;
+}
+.input-credit {
+    width: 32px;
+}
+
+.row-delete {
+    width: 30px;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}

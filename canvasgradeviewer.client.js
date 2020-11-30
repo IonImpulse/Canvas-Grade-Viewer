@@ -1,4 +1,107 @@
-function gradeCheck() {
+function getStorageData(key) {
+    return new Promise((resolve, reject) => chrome.storage.local.get(key, result => chrome.runtime.lastError
+        ? reject(Error(chrome.runtime.lastError.message))
+        : resolve(result)
+    )
+    )
+}
+
+function setStorageData(data) {
+    return new Promise((resolve, reject) => chrome.storage.local.set(data, () => chrome.runtime.lastError
+        ? reject(Error(chrome.runtime.lastError.message))
+        : resolve()
+    )
+    )
+}
+
+function isEmpty(obj) { 
+    for (var x in obj) { return false; }
+    return true;
+}
+
+async function addToGPA(input_grade) {    
+    console.log("adding to gpa...", input_grade);
+
+    const sub_domain = window.location.hostname.split(".")[0];
+    const page_number = window.location.pathname.split("/")[2];
+    const grade = input_grade;
+    const title = document.title.split(":")[1];
+
+    console.log(sub_domain);
+    
+    var current_info = {};
+    try {
+        current_info = await getStorageData("canvas_grade_viewer_data");
+        current_info = current_info.canvas_grade_viewer_data;
+    } catch (error) {
+        
+    }
+
+    console.log("Loaded:", current_info);
+
+    // Case 1:
+    // Not yet set up, nothing in local storage
+    if (isEmpty(current_info)) {
+        console.log("Case 1", sub_domain);
+        
+        console.log(grade);
+        const to_set = {
+            sub_domains: [{ name: sub_domain,
+                            pages: {page_names: [title.trim()],
+                                    page_numbers: [page_number],
+                                    grades: [grade],
+                                    credits: [1]}}]
+        };
+        
+        console.log(to_set);
+
+        current_info = to_set;
+
+    }
+
+    var index_of_subdomain = -1;
+    for (i in current_info.sub_domains) {
+        if (current_info.sub_domains[i].name == sub_domain) {
+            index_of_subdomain = i;
+        }
+    }
+
+    if (index_of_subdomain == -1) {
+        // Case 2:
+        // Has been set up, but not this subdomain. Would take effect if there were multiple schools that use canvas
+        console.log("Case 2");
+        current_info.sub_domains.push({name: sub_domain, pages: {page_names: [title.trim()], page_numbers: [page_number], grades: [grade], credits: [1]}})
+        index_of_subdomain = current_info.sub_domains.length - 1;
+    }
+
+    // Case 3:
+    // Has been set up w/ subdomain, but this page has not been added yet
+    if (!current_info.sub_domains[index_of_subdomain].pages.page_numbers.includes(page_number)) {
+        console.log("Case 3");
+        current_info.sub_domains[index_of_subdomain].pages.page_names.push(title.trim());
+        current_info.sub_domains[index_of_subdomain].pages.page_numbers.push(page_number);
+        current_info.sub_domains[index_of_subdomain].pages.grades.push(grade);
+        current_info.sub_domains[index_of_subdomain].pages.credits.push(1);
+    } else {
+        // Case 4:
+        // Has been set up and page has been added, so just update the grade
+        console.log("Case 4");
+        const index_of_page = current_info.sub_domains[index_of_subdomain].pages.page_numbers.indexOf(page_number);
+        current_info.sub_domains[index_of_subdomain].pages.grades[index_of_page] = grade;
+    }
+
+    console.log(current_info);
+
+    // Finally, only have one time where it is updated to increase
+    await setStorageData({"canvas_grade_viewer_data": current_info});
+
+}
+
+async function addToGPAButton() {
+    await addToGPA(await gradeCheck());
+}
+
+async function gradeCheck() {
     function getBrowser() {
         if( navigator.userAgent.indexOf("Chrome") != -1 ) {
           return "Chrome";
@@ -13,17 +116,38 @@ function gradeCheck() {
         }
     }
 
-    var line_to_get_env = 88;
+    var line_to_get_env = 88; //88
 
     if (getBrowser() == "Chrome") {
-        line_to_get_env = 37
+        line_to_get_env = 37;
     }
 
     var gradeOutput = document.getElementById("student-grades-final");
     gradeOutput.innerText = "Error Loading ENV variable! Refresh page to display grade...";
 
-    var env_string = document.documentElement.innerHTML.split("\n")[line_to_get_env].trim();
-    console.log("loading eval string...");
+    const page_html = document.documentElement.innerHTML.split("\n");
+
+    var env_string = page_html[line_to_get_env].trim();
+
+    console.log("loading eval string...", env_string.substring(0,3));
+
+    if (env_string.substring(0,3) != "ENV") {
+        console.log("Could not get ENV string, searching...");
+        
+        var temp_line = 0;
+
+        while (page_html[temp_line].trim().substring(0,3) == "ENV" ^ temp_line < 210) {
+            temp_line++;
+        }
+
+        if (page_html[temp_line].trim().substring(0,3) != "ENV") {
+            throw "No ENV variable to load...";
+        } else {
+            console.log("Found ENV variable!", temp_line);
+            env_string = page_html[temp_line].trim();
+        }
+        
+    }
 
     eval("var " + env_string);
 
@@ -33,11 +157,6 @@ function gradeCheck() {
             to_return += i;
         }
         return to_return;
-    }
-
-    function isolateWeight(weightString) {
-        weightString = weightString.slice(weightString.indexOf(">") + 1, weightString.indexOf("<", weightString.indexOf(">")));
-        return weightString;
     }
     
     function find_grade_max_type(inputAssignment) {
@@ -276,11 +395,14 @@ function gradeCheck() {
     
    // Debug string creation END
 
-    // Put the now-known grades in the HTML
+    // Put the now-known grades and GPA button in the HTML
     // YAY it's here!
-    var gradeOutput = document.getElementById("student-grades-final");
-    gradeOutput.innerText = `Total: ${total_grade.toString().slice(0, 5)}%`;
 
+    var gradeOutput = document.getElementById("student-grades-final");
+    gradeOutput.innerHTML = `Total: ${total_grade.toString().slice(0, 5)}%<br><button class="fOyUs_bGBk eHiXd_bGBk eHiXd_bXiG eHiXd_ycrn eHiXd_bNlk eHiXd_cuTS" id="add-to-gpa" type="button">Add To GPA</button>`;
+
+    document.getElementById("add-to-gpa").addEventListener("click", addToGPAButton);    
+    
     if (weightsExist == true && grading_period_is_all == false) {
         for (var i = 0; i < all_group_ids.length; i++) {
             const section_html = document.getElementById(`submission_group-${[all_group_ids[i]]}`);
@@ -301,7 +423,42 @@ function gradeCheck() {
         }
 
     }
+
+    console.log("updating gpa??");
+
+    let current_info = await getStorageData("canvas_grade_viewer_data");
     
+    if (isEmpty(current_info) == false) {
+        console.log(current_info.canvas_grade_viewer_data.sub_domains);
+        if (current_info.canvas_grade_viewer_data.sub_domains.length != 0) {
+            current_info = current_info.canvas_grade_viewer_data;
+            const sub_domain = window.location.hostname.split(".")[0];
+            const page_number = window.location.pathname.split("/")[2];
+        
+            console.log(sub_domain, page_number);
+        
+            let in_gpa = -1;
+            for (i in current_info.sub_domains) {
+                if (current_info.sub_domains[i].name == sub_domain) {
+                    in_gpa = i;
+                }
+            }
+            
+            console.log(in_gpa);
+
+            if (in_gpa != -1) {
+                const in_gpa_page = current_info.sub_domains[in_gpa].pages.page_numbers.indexOf(page_number);
+                
+                if (in_gpa_page != -1) {
+                    console.log("updating...");
+                    await addToGPA(total_grade);
+                }
+            }
+        }
+    }
+    
+    
+    return total_grade;
 }
 
 var ENV;
@@ -315,7 +472,7 @@ async function WaitForGrade() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {   
-    gradeCheck();        
+    gradeCheck();
 }, false);
 
 document.addEventListener('mouseup', function() {
@@ -324,7 +481,7 @@ document.addEventListener('mouseup', function() {
 }, false);
 
 document.addEventListener('keydown', function(e) {
-    if(e.keyCode == 13) {
+    if(e.key == "Enter") {
         function sleep(ms) {
             return new Promise(resolve => setTimeout(resolve, ms));
          }
