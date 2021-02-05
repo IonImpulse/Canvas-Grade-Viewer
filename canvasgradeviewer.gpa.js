@@ -70,7 +70,7 @@ async function delete_row() {
 function get_gpa(grade) {
     if (grade < 0) { return null; }
     
-    const percent_cuts = [94, 90, 87, 84, 80, 77, 74, 70, 67, 64, 61, 0];
+    const percent_cuts = [93, 90, 87, 83, 80, 77, 73, 70, 67, 63, 61, 0];
     const gpa_cuts = [4, 3.7, 3.3, 3.0, 2.7, 2.3, 2.0, 1.7, 1.3, 1.0, 0.0];
 
     for (i in percent_cuts) {
@@ -152,7 +152,7 @@ async function set_table() {
     console.log(grades);
 
     grade_div.innerHTML = "";
-    
+
     if (grades) {
         for (var school = 0; school < grades.sub_domains.length; school++) {
             const school_name = grades.sub_domains[school].name;
@@ -174,9 +174,13 @@ async function set_table() {
                             `;
 
             for (var subject = 0; subject < grades.sub_domains[school].pages.grades.length; subject++) {
+                const grade_url = `https://${grades.sub_domains[school].name}.instructure.com/courses/${grades.sub_domains[school].pages.page_numbers[subject]}/grades`;
+                
                 output += `<tr id="${school}-row-${subject}">
                             <td class="row-grade">${grades.sub_domains[school].pages.grades[subject].toString().slice(0, 5)}%</td>
-                            <td class="row-name">${grades.sub_domains[school].pages.page_names[subject]}</td>
+                            <td class="row-name">
+                                <a href="${grade_url}" target="_blank">${grades.sub_domains[school].pages.page_names[subject]}</a>                            
+                            </td>
                             <td class="row-credit">
                                     <input type="number" class="input-credit" id="credit-input-${school}-row-${subject}" step=".01" value="${grades.sub_domains[school].pages.credits[subject]}">
                             </td>

@@ -123,6 +123,12 @@ async function gradeCheck() {
     }
 
     var gradeOutput = document.getElementById("student-grades-final");
+    var rightSidebar = document.getElementById("student-grades-right-content");
+
+    if (gradeOutput == null) {
+        gradeOutput = rightSidebar.getElementsByClassName("student_assignment final_grade")[0];
+    }
+
     gradeOutput.innerText = "Error Loading ENV variable! Refresh page to display grade...";
 
     const page_html = document.documentElement.innerHTML.split("\n");
@@ -201,19 +207,20 @@ async function gradeCheck() {
                 total_grade = total_grade + assignment.grade;
                 totalMax = totalMax + assignment.max;
             }
-    
+            
+            let return_grade;
+
             if (total_grade == 0) {
-                total_grade = "N/A";
+                return_grade = "N/A";
             } else {
-                total_grade = total_grade/totalMax*100;
+                return_grade = total_grade/totalMax*100;
             }
             
             const to_return = {
-                total_grade: total_grade,
-                all_group_grades: null,
-                all_group_maxes: null
+                total_grade: return_grade,
+                all_group_grades: [total_grade],
+                all_group_maxes: [totalMax]
             };
-
             return to_return;
 
         } else {
@@ -268,6 +275,7 @@ async function gradeCheck() {
                 all_group_weights: current_group.group_weights,
                 all_group_ids: current_group.group_ids
             };
+            
             
             return to_return;
 
@@ -331,16 +339,22 @@ async function gradeCheck() {
             all_group_grades = all_group_grades.concat(periods[i].all_group_grades);
             all_group_maxes = all_group_maxes.concat(periods[i].all_group_maxes);
             all_group_ids = all_group_ids.concat(periods[i].all_group_ids);
-
-            if (isNaN(periods[i].total_grade) == false) {
-                total_grade += (ENV["grading_periods"][i]["weight"]/100) * periods[i].total_grade;
-                period_weight_sum += ENV["grading_periods"][i]["weight"];
+        }
+        
+        if (ENV["grading_periods"][0]["weight"] == null) {
+            total_grade = 100*(sum(all_group_grades)/sum(all_group_maxes));
+        } else {
+            for (i in periods) {
+                if (isNaN(periods[i].total_grade) == false) {
+                    total_grade += (ENV["grading_periods"][i]["weight"]/100) * periods[i].total_grade;
+                    period_weight_sum += ENV["grading_periods"][i]["weight"];
+                }
             }
-        }
 
-        if (period_weight_sum != 100) {
-            total_grade = total_grade * (100/period_weight_sum);
-        }
+            if (period_weight_sum != 100 || period_weight_sum != 0) {
+                total_grade = total_grade * (100/period_weight_sum);
+            }
+        }        
 
     } else {
         var periods = [get_grade(assignments_list, weightsExist)];
@@ -398,7 +412,6 @@ async function gradeCheck() {
     // Put the now-known grades and GPA button in the HTML
     // YAY it's here!
 
-    var gradeOutput = document.getElementById("student-grades-final");
     gradeOutput.innerHTML = `Total: ${total_grade.toString().slice(0, 5)}%<br><button class="fOyUs_bGBk eHiXd_bGBk eHiXd_bXiG eHiXd_ycrn eHiXd_bNlk eHiXd_cuTS" id="add-to-gpa" type="button">Add To GPA</button>`;
 
     document.getElementById("add-to-gpa").addEventListener("click", addToGPAButton);    
@@ -407,19 +420,12 @@ async function gradeCheck() {
         for (var i = 0; i < all_group_ids.length; i++) {
             const section_html = document.getElementById(`submission_group-${[all_group_ids[i]]}`);
 
-            var section = section_html.innerHTML.split("\n");
             grade_to_insert = (100*all_group_grades[i]/all_group_maxes[i]).toString().slice(0,5);
             
-            string_to_insert = `${all_group_grades[i]}/${all_group_maxes[i]} (${grade_to_insert}%)`;
-            
-            section[18] = " ";
-            section[19] = " ";
-            section[20] = " ";
+            string_to_insert = `${all_group_grades[i]}/${all_group_maxes[i]}`;
 
-            section[22] = string_to_insert;
-
-            section_html.innerHTML = section.join("\n");
-            
+            section_html.getElementsByClassName("assignment_score")[0].innerText = `${grade_to_insert}%`;
+            section_html.getElementsByClassName("possible points_possible")[0].innerText = string_to_insert;
         }
 
     }
@@ -429,8 +435,8 @@ async function gradeCheck() {
     let current_info = await getStorageData("canvas_grade_viewer_data");
     
     if (isEmpty(current_info) == false) {
-        console.log(current_info.canvas_grade_viewer_data.sub_domains);
-        if (current_info.canvas_grade_viewer_data.sub_domains.length != 0) {
+        console.log(current_info.canvas_grade_viewer_data);
+        if (current_info.canvas_grade_viewer_data != {}) {
             current_info = current_info.canvas_grade_viewer_data;
             const sub_domain = window.location.hostname.split(".")[0];
             const page_number = window.location.pathname.split("/")[2];

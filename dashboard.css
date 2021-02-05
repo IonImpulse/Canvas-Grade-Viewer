@@ -100,3 +100,16 @@ input::-webkit-inner-spin-button {
 input[type=number] {
   -moz-appearance: textfield;
 }
+
+td a {
+    width: 100%;
+    display: block;
+}
+
+td a:link {
+    color:darkred;
+}
+
+td a:visited {
+    color: darkred;
+}
